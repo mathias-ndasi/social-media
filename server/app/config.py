@@ -1,8 +1,9 @@
 import configparser
 import os
 
+root_path = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 config = configparser.ConfigParser()
-config.read(os.getcwd()+'/config.ini')
+config.read(root_path + '/config.ini')
 
 
 class Config:
@@ -16,4 +17,4 @@ class Config:
     MAIL_USERNAME = config.get('settings', 'MAIL_USERNAME')
     MAIL_PASSWORD = config.get('settings', 'MAIL_PASSWORD')
 
-    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+    BASE_DIR = root_path
