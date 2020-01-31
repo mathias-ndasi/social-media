@@ -1,4 +1,4 @@
-from app import create_app, db, ma
+from app import create_app, db
 from datetime import datetime
 from app.config import Config
 
@@ -6,18 +6,20 @@ from app.config import Config
 class User(db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(60), unique=True)
+    username = db.Column(db.String(255), unique=True)
     email = db.Column(db.String(), unique=True)
-    password = db.Column(db.String(100))
+    password = db.Column(db.String(255))
     profile_pic = db.Column(
         db.String(), default=Config.BASE_DIR+'/app/static/default.png')
-    bio = db.Column(db.String(200), nullable=True)
-    location = db.Column(db.String(100), nullable=True)
-    website = db.Column(db.String(100), nullable=True)
+    bio = db.Column(db.String(255), nullable=True)
+    location = db.Column(db.String(255), nullable=True)
+    website = db.Column(db.String(255), nullable=True)
     is_active = db.Column(db.Boolean, default=False)
+    is_admin = db.Column(db.Boolean, default=False)
     is_deleted = db.Column(db.Boolean, default=False)
     joined_date = db.Column(db.DateTime, default=datetime.utcnow())
     posts = db.relationship('Post', backref='user')
+    secret_code = db.Column(db.String(8), nullable=True)
 
     created_on = db.Column(db.DateTime, default=datetime.utcnow())
     updated_on = db.Column(db.DateTime, onupdate=datetime.utcnow())
@@ -28,7 +30,7 @@ class User(db.Model):
         self.password = password
 
     def __repr__(self):
-        return f'User({self.username})'
+        return f"User({self.username[:30]+'...'})"
 
 
 class Post(db.Model):
@@ -54,7 +56,7 @@ class Post(db.Model):
 class Comment(db.Model):
     __tablename__ = 'comment'
     id = db.Column(db.Integer, primary_key=True)
-    body = db.Column(db.String(200))
+    body = db.Column(db.String(255))
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     comment_date = db.Column(db.DateTime, default=datetime.utcnow())
@@ -73,7 +75,7 @@ class Comment(db.Model):
 class Notification(db.Model):
     __tablename__ = 'notification'
     id = db.Column(db.Integer, primary_key=True)
-    body = db.Column(db.String(100))
+    body = db.Column(db.String(255))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     notification_date = db.Column(db.DateTime, default=datetime.utcnow())
 
