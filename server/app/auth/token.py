@@ -27,8 +27,11 @@ def token_verify(token, *args, **kwargs):
         error = 'Invalid token'
         return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
 
-    user = User.query.filter_by(
-        id=data['user_id'], is_active=True, is_deleted=False).first()
+    try:
+        user = User.query.filter_by(
+            id=data['user_id'], is_active=True, is_deleted=False).first()
+    except Exception as e:
+        pass
 
     if not user:
         error = 'User not found'

@@ -1,10 +1,10 @@
-from marshmallow.exceptions import ValidationError
 from flask import Blueprint, jsonify, request
+from marshmallow.exceptions import ValidationError
 
-from app import models, db, ma
+from app import models, db
 from app.config import Config
 from app.utils import util, email
-from app.validators import model_schemas
+from app.schemas import schema_user
 from app.auth import token, decorators
 
 account = Blueprint('account', __name__, url_prefix='/account')
@@ -17,15 +17,15 @@ def signup():
     success = False
     results = None
 
-    if request.form:
-        data = request.form
+    if request.is_json:
+        data = request.get_json()
 
         if not data:
-            error = 'form data is required'
+            error = 'Json data is required'
             return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
 
         try:
-            clean_data = model_schemas.user_schema.load(data)
+            clean_data = schema_user.user_schema.load(data)
 
             users = models.User.query.all()
             for user in users:
@@ -46,7 +46,7 @@ def signup():
         except ValidationError as e:
             error = e.normalized_messages()
     else:
-        error = 'Json data is required'
+        error = 'Only Json data is accepted'
 
     return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
 
@@ -86,7 +86,7 @@ def account_confirm():
         user.is_active = True
         user.secret_code = None
         db.session.commit()
-        message = 'User account is activated'
+        message = 'User account is activated, you can now login'
         success = True
 
     else:
@@ -115,7 +115,7 @@ def login():
             return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
 
         try:
-            clean_data = model_schemas.login_schema.load(data)
+            clean_data = schema_user.login_schema.load(data)
 
             user = models.User.query.filter_by(
                 email=clean_data['email'], is_active=True, is_deleted=False, secret_code=None).first()
@@ -131,7 +131,7 @@ def login():
             user_token = token.generate_token(user)
             message = 'User successfully login'
             success = True
-            results = model_schemas.user_schema.dump(user)
+            results = schema_user.user_schema.dump(user)
             results['token'] = user_token
 
         except ValidationError as e:
@@ -158,7 +158,7 @@ def get_single_user(username):
         return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
 
     success = True
-    results = model_schemas.user_schema.dump(user)
+    results = schema_user.user_schema.dump(user)
 
     return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
 
@@ -179,7 +179,7 @@ def get_all_users():
         return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
 
     success = True
-    results = model_schemas.user_schemas.dump(users)
+    results = schema_user.user_schemas.dump(users)
 
     return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
 
@@ -223,13 +223,13 @@ def update_profile_pic(username):
 
     success = True
     message = 'Profile pic successfully updated'
-    results = model_schemas.user_schema.dump(user)
+    results = schema_user.user_schema.dump(user)
 
     return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
 
 
 @account.route('/admin/<string:username>', methods=['PUT'])
-@decorators.token_required
+# @decorators.token_required
 @decorators.admin_required
 def register_admin(username):
     error = None
@@ -249,7 +249,7 @@ def register_admin(username):
     db.session.commit()
 
     success = True
-    results = model_schemas.user_schema.dump(user)
+    results = schema_user.user_schema.dump(user)
 
     return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
 
@@ -302,7 +302,7 @@ def update_user_bio(username):
             return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
 
         try:
-            clean_data = model_schemas.user_bio_schema.load(data)
+            clean_data = schema_user.user_bio_schema.load(data)
 
             user = models.User.query.filter_by(
                 username=username, is_active=True, is_deleted=False, secret_code=None).first()
@@ -324,7 +324,7 @@ def update_user_bio(username):
 
             message = 'User bio successfully updated'
             success = True
-            results = model_schemas.user_schema.dump(user)
+            results = schema_user.user_schema.dump(user)
 
         except ValidationError as e:
             error = e.normalized_messages()
@@ -354,7 +354,7 @@ def password_reset():
             return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
 
         try:
-            clean_data = model_schemas.user_email_schema.load(data)
+            clean_data = schema_user.user_email_schema.load(data)
 
             user = models.User.query.filter_by(
                 email=clean_data['email'], is_active=True, is_deleted=False).first()
@@ -376,7 +376,7 @@ def password_reset():
     return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
 
 
-@account.route('/password_reset', methods=['POST'])
+@account.route('/password_reset_code_validation', methods=['PUT'])
 def password_reset_code_validation():
     error = None
     message = None
@@ -395,23 +395,26 @@ def password_reset_code_validation():
             error = 'Json data is missen'
             return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
 
+        if not data.get('secret_code'):
+            error = {'secret_code': 'This is a required field'}
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+
         try:
-            clean_data = model_schemas.user_email_schema.load(data)
-
             user = models.User.query.filter_by(
-                email=clean_data['email'], is_active=True, is_deleted=False).first()
+                secret_code=data['secret_code'], is_active=True, is_deleted=False).first()
+        except Exception as e:
+            pass
 
-            if not user:
-                error = 'User not found'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+        if not user:
+            error = 'User not found'
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
 
-            email.password_reset_email(user)
+        user.secret_code = None
+        db.session.commit()
 
-            message = 'Check your email for password reset secret code'
-            success = True
+        message = 'Secret code valid'
+        success = True
 
-        except ValidationError as e:
-            error = e.normalized_messages()
     else:
         error = "Json data is required"
 
@@ -438,7 +441,7 @@ def password_reset_confirm():
             return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
 
         try:
-            clean_data = model_schemas.user_password_change_schema.load(data)
+            clean_data = schema_user.user_password_change_schema.load(data)
 
             user = models.User.query.filter_by(
                 email=clean_data['email'], is_active=True, is_deleted=False).first()
@@ -460,3 +463,9 @@ def password_reset_confirm():
         error = "Json data is required"
 
     return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+
+
+@account.route('/test')
+def test():
+    print('HERE.......................')
+    return jsonify({'message': 'WORKING'})

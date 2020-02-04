@@ -18,13 +18,14 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     is_deleted = db.Column(db.Boolean, default=False)
     joined_date = db.Column(db.DateTime, default=datetime.utcnow())
-    posts = db.relationship('Post', backref='user')
+    posts = db.relationship('Post', secondary='liked_post')
     secret_code = db.Column(db.String(8), nullable=True)
+    notifications = db.relationship('Notification', backref='user')
 
     created_on = db.Column(db.DateTime, default=datetime.utcnow())
     updated_on = db.Column(db.DateTime, onupdate=datetime.utcnow())
 
-    def __init__(self, username, email, password):
+    def __init__(self, username, email, password, *args, **kwargs):
         self.username = username
         self.email = email
         self.password = password
@@ -36,21 +37,33 @@ class User(db.Model):
 class Post(db.Model):
     __tablename__ = 'post'
     id = db.Column(db.Integer, primary_key=True)
-    body = db.Column(db.Text)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    body = db.Column(db.String(255))
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    no_likes = db.Column(db.Integer, default=0)
+    no_comments = db.Column(db.Integer, default=0)
     posted_date = db.Column(db.DateTime, default=datetime.utcnow())
     liked = db.Column(db.Boolean, default=False)
+    liked_by = db.relationship('User', secondary='liked_post')
     comments = db.relationship('Comment', backref='post')
 
     created_on = db.Column(db.DateTime, default=datetime.utcnow())
     updated_on = db.Column(db.DateTime, onupdate=datetime.utcnow())
 
-    def __init__(self, content, user_id):
-        self.content = content
-        self.user_id = user_id
+    def __init__(self, body, created_by, *args, **kwargs):
+        self.body = body
+        self.created_by = created_by
 
     def __repr__(self):
-        return f"Post({self.body[:10]+'...'}|{self.posted_date}|{self.user_id})"
+        return f"Post({self.body[:10]+'...'}|{self.posted_date}|{self.created_by})"
+
+
+class LikedPost(db.Model):
+    __tablename__ = 'liked_post'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    user = db.relationship(User, backref="liked_post")
+    post = db.relationship(Post, backref="liked_post")
 
 
 class Comment(db.Model):
@@ -58,33 +71,36 @@ class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.String(255))
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    commented_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     comment_date = db.Column(db.DateTime, default=datetime.utcnow())
 
     created_on = db.Column(db.DateTime, default=datetime.utcnow())
     updated_on = db.Column(db.DateTime, onupdate=datetime.utcnow())
 
-    def __init__(self, comment, user_id):
-        self.comment = comment
-        self.user_id = user_id
+    def __init__(self, body, post_id, commented_by, *args, **kwargs):
+        self.body = body
+        self.post_id = post_id
+        self.commented_by = commented_by
 
     def __repr__(self):
-        return f"Comment({self.body[:10]+'...'}|{self.comment_date}|{self.user_id})"
+        return f"Comment({self.body[:10]+'...'}|{self.comment_date}|{self.commented_by})"
 
 
 class Notification(db.Model):
     __tablename__ = 'notification'
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.String(255))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_by = db.Column(db.Integer)
+    target_user = db.Column(db.Integer, db.ForeignKey('user.id'))
     notification_date = db.Column(db.DateTime, default=datetime.utcnow())
 
     created_on = db.Column(db.DateTime, default=datetime.utcnow())
     updated_on = db.Column(db.DateTime, onupdate=datetime.utcnow())
 
-    def __init__(self, body, user_id):
+    def __init__(self, body, created_by, target_user, *args, **kwargs):
         self.body = body
-        self.user_id = user_id
+        self.created_by = created_by
+        self.target_user = target_user
 
     def __repr__(self):
-        return f"Notification({self.body[:10]+'...'}|{self.user_id})"
+        return f"Notification({self.body[:10]+'...'}|{self.created_by})"

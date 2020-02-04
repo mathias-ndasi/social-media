@@ -29,12 +29,16 @@ def token_required(f):
             error = 'Token is Invalid'
             return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), 401
 
-        user = User.query.filter_by(
-            id=data['user_id'], is_active=True, is_deleted=False, secret_code=None).first()
+        try:
+            user = User.query.filter_by(
+                id=data['user_id'], is_active=True, is_deleted=False, secret_code=None).first()
 
-        if not user:
-            error = 'User not found'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            if not user:
+                error = 'Token is Invalid'
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+
+        except Exception as e:
+            pass
 
         return f(*args, **kwargs)
     return wrapper
@@ -63,23 +67,23 @@ def admin_required(f):
             error = 'Token is Invalid'
             return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), 401
 
-        user = User.query.filter_by(
-            id=data['user_id'], is_active=True, is_deleted=False, secret_code=None).first()
+        try:
+            user = User.query.filter_by(
+                id=data['user_id'], is_active=True, is_admin=True, is_deleted=False, secret_code=None).first()
 
-        if not user:
-            error = 'User not found'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            if not user:
+                error = 'Admin permissions required'
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
 
-        if not user.is_admin:
-            message = 'Admin permissions required'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+        except Exception as e:
+            pass
 
         return f(*args, **kwargs)
     return wrapper
 
 
 # Get user from token
-def get_user_from_token(*args, **kwargs):
+def get_user_from_token(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         error = None
@@ -101,12 +105,16 @@ def get_user_from_token(*args, **kwargs):
             error = 'Token is Invalid'
             return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), 401
 
-        user = User.query.filter_by(
-            id=data['user_id'], is_active=True, is_deleted=False, secret_code=None).first()
+        try:
+            user = User.query.filter_by(
+                id=data['user_id'], is_active=True, is_deleted=False, secret_code=None).first()
 
-        if not user:
-            error = 'User not found'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            if not user:
+                error = 'Admin permissions required'
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+
+        except Exception as e:
+            pass
 
         return f(user, *args, **kwargs)
     return wrapper
