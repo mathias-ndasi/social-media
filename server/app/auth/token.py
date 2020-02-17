@@ -10,7 +10,7 @@ from app.models import User
 # generate jwt token
 def generate_token(user, *args, **kwargs):
     token = jwt.encode({'user_id': user.id, 'exp': datetime.datetime.utcnow(
-    ) + datetime.timedelta(days=2)}, Config.SECRET_KEY)
+    ) + datetime.timedelta(days=30)}, Config.SECRET_KEY)
     return token.decode('UTF-8')
 
 

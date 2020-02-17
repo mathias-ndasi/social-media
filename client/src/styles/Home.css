@@ -1,0 +1,23 @@
+.home {
+  background-color: #dddddd3d;
+  padding: auto 400px;
+  min-height: 100vh;
+}
+
+.home .container {
+  display: grid;
+  grid-template-areas: ". . . posts user . . .";
+  /* border: 1px solid red; */
+}
+
+.home .container .posts {
+  grid-area: posts;
+}
+
+.home .container .user {
+  grid-area: user;
+  background-color: #fff;
+  height: fit-content;
+  padding: 25px 10px;
+  border-radius: 5px;
+}

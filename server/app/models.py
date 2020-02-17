@@ -1,3 +1,4 @@
+from flask import request
 from app import create_app, db
 from datetime import datetime
 from app.config import Config
@@ -10,7 +11,7 @@ class User(db.Model):
     email = db.Column(db.String(), unique=True)
     password = db.Column(db.String(255))
     profile_pic = db.Column(
-        db.String(), default=Config.BASE_DIR+'/app/static/default.png')
+        db.String(), default=Config.BASE_URL+'/static/default.png')
     bio = db.Column(db.String(255), nullable=True)
     location = db.Column(db.String(255), nullable=True)
     website = db.Column(db.String(255), nullable=True)
@@ -18,7 +19,8 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     is_deleted = db.Column(db.Boolean, default=False)
     joined_date = db.Column(db.DateTime, default=datetime.utcnow())
-    posts = db.relationship('Post', secondary='liked_post')
+    posts = db.relationship('Post', secondary='liked_post',
+                            cascade="save-update, merge, delete")
     secret_code = db.Column(db.String(8), nullable=True)
     notifications = db.relationship('Notification', backref='user')
 
@@ -63,7 +65,8 @@ class LikedPost(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
     user = db.relationship(User, backref="liked_post")
-    post = db.relationship(Post, backref="liked_post")
+    post = db.relationship(Post, backref="liked_post",
+                           cascade="save-update, merge, delete")
 
 
 class Comment(db.Model):

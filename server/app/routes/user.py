@@ -12,7 +12,7 @@ account = Blueprint('account', __name__, url_prefix='/account')
 
 @account.route('/signup', methods=['POST'])
 def signup():
-    error = None
+    error = {'username': None, 'email': None, 'password': None}
     message = None
     success = False
     results = None
@@ -21,8 +21,8 @@ def signup():
         data = request.get_json()
 
         if not data:
-            error = 'Json data is required'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            error['username'] = 'Json data is required'
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         try:
             clean_data = schema_user.user_schema.load(data)
@@ -30,8 +30,9 @@ def signup():
             users = models.User.query.all()
             for user in users:
                 if user.email == clean_data['email'] or user.username == clean_data['username']:
-                    error = 'User already exist'
-                    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                    error['username'] = 'User already exist'
+                    error['email'] = 'User already exist'
+                    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
             password = clean_data['password']
             hash_pwd = util.hash_password(password)
@@ -43,17 +44,19 @@ def signup():
             success = True
             message = 'Account activation code sent to your email'
 
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('CREATED')
+
         except ValidationError as e:
             error = e.normalized_messages()
     else:
-        error = 'Only Json data is accepted'
+        error['username'] = 'Only Json data is accepted'
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
 
 @account.route('/account_confirmation', methods=['PUT'])
 def account_confirm():
-    error = None
+    error = {'secret_code': None}
     message = None
     success = False
     results = None
@@ -63,16 +66,16 @@ def account_confirm():
             data = request.get_json()
 
             if not data:
-                error = 'Json data is missen'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                error['secret_code'] = 'Json data is missen'
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         except Exception as e:
-            error = 'Json data is missen'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            error['secret_code'] = 'Json data is missen'
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         if not data:
-            error = {'secret_code': 'This is a required field'}
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            error['secret_code'] = 'This is a required field'
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         secret_code = data['secret_code']
 
@@ -80,8 +83,8 @@ def account_confirm():
             secret_code=secret_code, is_active=False, is_deleted=False).first()
 
         if not user:
-            error = 'Invalid secret code or user already activated'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            error['secret_code'] = 'Invalid secret code or user already activated'
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         user.is_active = True
         user.secret_code = None
@@ -89,15 +92,17 @@ def account_confirm():
         message = 'User account is activated, you can now login'
         success = True
 
-    else:
-        error = 'Json data is required'
+        return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    else:
+        error['secret_code'] = 'Json data is required'
+
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
 
 @account.route('/login', methods=['POST'])
 def login():
-    error = None
+    error = {'email': None, 'password': None}
     message = None
     success = False
     results = None
@@ -107,12 +112,12 @@ def login():
             data = request.get_json()
 
             if not data:
-                error = 'Json data is missen'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                error['email'] = 'Json data is missen'
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         except Exception as e:
-            error = 'Json data is missen'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            error['email'] = 'Json data is missen'
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         try:
             clean_data = schema_user.login_schema.load(data)
@@ -121,12 +126,12 @@ def login():
                 email=clean_data['email'], is_active=True, is_deleted=False, secret_code=None).first()
 
             if not user:
-                error = 'User not found'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                error['email'] = 'User not found'
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
             if not util.verify_password(user, clean_data['password']):
-                error = 'Incorrect password'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                error['password'] = 'Incorrect password'
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
             user_token = token.generate_token(user)
             message = 'User successfully login'
@@ -134,12 +139,14 @@ def login():
             results = schema_user.user_schema.dump(user)
             results['token'] = user_token
 
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
+
         except ValidationError as e:
             error = e.normalized_messages()
     else:
-        error = "Json data is required"
+        error['password'] = "Json data is required"
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
 
 @account.route('/user/<string:username>', methods=['GET'])
@@ -155,12 +162,18 @@ def get_single_user(username):
 
     if not user:
         error = 'User not found'
-        return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+        return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
     success = True
     results = schema_user.user_schema.dump(user)
+    results['notifications'] = []
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    for notification in user.notifications:
+        data = {'body': notification.body, 'created_by': notification.created_by,
+                'notification_date': notification.notification_date}
+        results['notifications'].append(data)
+
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
 
 
 @account.route('/users', methods=['GET'])
@@ -176,47 +189,47 @@ def get_all_users():
 
     if not users:
         error = 'User not found'
-        return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+        return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
     success = True
     results = schema_user.user_schemas.dump(users)
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
 
 
 @account.route('/<string:username>/profile_pic', methods=['PUT'])
 @decorators.token_required
 def update_profile_pic(username):
-    error = None
+    error = {'profile_pic': None}
     message = None
     success = False
     results = None
 
     if not request.files:
-        error = 'Form data is required'
-        return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+        error['profile_pic'] = 'Form data is required'
+        return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
     if len(request.files) > 1:
-        error = 'Only a single image can be updated'
-        return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+        error['profile_pic'] = 'Only a single image can be updated'
+        return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
     if not request.files['profile_pic']:
-        error = {'profile_pic': 'This is a required field'}
-        return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+        error['profile_pic'] = 'This is a required field'
+        return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
     user = models.User.query.filter_by(
         username=username, is_active=True, is_deleted=False, secret_code=None).first()
 
     if not user:
-        error = 'Invalid user'
-        return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+        error['profile_pic'] = 'Invalid user'
+        return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
     file = request.files['profile_pic']
     picture_path = util.save_picture(file, user)
 
     if picture_path == None:
-        error = 'Invalid file extension'
-        return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+        error['profile_pic'] = 'Invalid file extension'
+        return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
     user.profile_pic = picture_path
     db.session.commit()
@@ -225,7 +238,7 @@ def update_profile_pic(username):
     message = 'Profile pic successfully updated'
     results = schema_user.user_schema.dump(user)
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
 
 
 @account.route('/admin/<string:username>', methods=['PUT'])
@@ -242,7 +255,7 @@ def register_admin(username):
 
     if not user:
         error = 'User not found'
-        return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+        return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
     user.is_admin = True
     user.is_active = True
@@ -251,7 +264,7 @@ def register_admin(username):
     success = True
     results = schema_user.user_schema.dump(user)
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
 
 
 @account.route('/delete/<string:username>', methods=['DELETE'])
@@ -268,7 +281,7 @@ def delete_user(username):
 
     if not user:
         error = 'User not found'
-        return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+        return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
     user.is_deleted = True
     user.is_active = False
@@ -278,7 +291,7 @@ def delete_user(username):
     success = True
     message = 'User successfully deleted'
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
 
 
 @account.route('/user/update/<string:username>/bio', methods=['PUT'])
@@ -295,11 +308,11 @@ def update_user_bio(username):
 
             if not data:
                 error = 'Json data is missen'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         except Exception as e:
             error = 'Json data is missen'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         try:
             clean_data = schema_user.user_bio_schema.load(data)
@@ -309,7 +322,7 @@ def update_user_bio(username):
 
             if not user:
                 error = 'User not found'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
             if clean_data.get('bio'):
                 user.bio = clean_data['bio']
@@ -326,12 +339,14 @@ def update_user_bio(username):
             success = True
             results = schema_user.user_schema.dump(user)
 
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
+
         except ValidationError as e:
             error = e.normalized_messages()
     else:
         error = "Json data is required"
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
 
 @account.route('/password_reset', methods=['POST'])
@@ -347,11 +362,11 @@ def password_reset():
 
             if not data:
                 error = 'Json data is missen'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         except Exception as e:
             error = 'Json data is missen'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         try:
             clean_data = schema_user.user_email_schema.load(data)
@@ -361,19 +376,21 @@ def password_reset():
 
             if not user:
                 error = 'User not found'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
             email.password_reset_email(user)
 
             message = 'Check your email for password reset secret code'
             success = True
 
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
+
         except ValidationError as e:
             error = e.normalized_messages()
     else:
         error = "Json data is required"
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
 
 @account.route('/password_reset_code_validation', methods=['PUT'])
@@ -389,15 +406,15 @@ def password_reset_code_validation():
 
             if not data:
                 error = 'Json data is missen'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         except Exception as e:
             error = 'Json data is missen'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         if not data.get('secret_code'):
             error = {'secret_code': 'This is a required field'}
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         try:
             user = models.User.query.filter_by(
@@ -407,7 +424,7 @@ def password_reset_code_validation():
 
         if not user:
             error = 'User not found'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         user.secret_code = None
         db.session.commit()
@@ -415,10 +432,12 @@ def password_reset_code_validation():
         message = 'Secret code valid'
         success = True
 
+        return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
+
     else:
         error = "Json data is required"
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
 
 @account.route('/password_reset_confirm', methods=['PUT'])
@@ -434,11 +453,11 @@ def password_reset_confirm():
 
             if not data:
                 error = 'Json data is missen'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         except Exception as e:
             error = 'Json data is missen'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         try:
             clean_data = schema_user.user_password_change_schema.load(data)
@@ -448,7 +467,7 @@ def password_reset_confirm():
 
             if not user:
                 error = 'User not found'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
             user.password = util.hash_password(clean_data['password'])
 
@@ -457,15 +476,48 @@ def password_reset_confirm():
             message = 'User password successfully updated, you can now login'
             success = True
 
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
+
         except ValidationError as e:
             error = e.normalized_messages()
     else:
         error = "Json data is required"
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
 
-@account.route('/test')
+@account.route('/<string:username>/refresh_token', methods=['GET'])
+def refresh_token(username):
+    error = None
+    message = None
+    success = False
+    results = None
+
+    try:
+        user = models.User.query.filter_by(
+            username=username, is_active=True, is_deleted=False).first()
+
+        if not user:
+            error = 'User not found'
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
+
+        new_token = token.generate_token(user)
+
+        schema_user.user_schema.dump
+
+        message = 'Token successfully refreshed'
+        success = True
+
+        return jsonify({'token': new_token}), util.http_status_code('SUCCESS')
+
+    except ValidationError as e:
+        error = e.normalized_messages()
+
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
+
+
+@account.route('/test', methods=['GET'])
 def test():
     print('HERE.......................')
-    return jsonify({'message': 'WORKING'})
+    print(request.headers['Authorization'].split(' ')[-1], '#######')
+    return jsonify({'message': 'WORKING'}), 200

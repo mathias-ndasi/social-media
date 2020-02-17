@@ -15,12 +15,12 @@ bcrypt = Bcrypt()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
+    CORS(app)
     app.config.from_object(Config)
     db.init_app(app)
     ma.init_app(app)
     mail.init_app(app)
     bcrypt.init_app(app)
-    CORS(app)
 
     from app.routes.user import account
     from app.routes.post import post_api

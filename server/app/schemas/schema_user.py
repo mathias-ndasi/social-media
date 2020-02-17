@@ -17,6 +17,11 @@ class UserSchema(ma.Schema):
     is_admin = ma.Boolean()
     joined_date = ma.DateTime()
 
+    @validates('password')
+    def validate_password(self, password):
+        if len(password) < 4:
+            raise ValidationError('Password is too short')
+
 
 user_schema = UserSchema()
 user_schemas = UserSchema(many=True)

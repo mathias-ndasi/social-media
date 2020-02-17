@@ -18,3 +18,4 @@ class Config:
     MAIL_PASSWORD = config.get('settings', 'MAIL_PASSWORD')
 
     BASE_DIR = root_path
+    BASE_URL = config.get('settings', 'BASE_URL')

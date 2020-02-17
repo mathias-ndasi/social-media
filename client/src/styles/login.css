@@ -1,0 +1,104 @@
+.login {
+    /* border: 1px solid red; */
+    height: 90vh;
+    /* background-image: url("../images/login.png");
+    background-repeat: no-repeat;
+    background-position: center; */
+}
+
+.login form {
+    border: 1px solid rgba(0, 0, 0, 0.17);
+    /* background-color: rgba(251, 251, 251, 0.712); */
+    width: 500px;
+    padding: 80px 30px;
+    position: absolute;
+    top: 50%;
+    left: 49%;
+    transform: translate(-50%, -49%);
+    border-radius: 50px 0px 50px 0px;
+    -webkit-border-radius: 50px 0px 50px 0px;
+    -moz-border-radius: 50px 0px 50px 0px;
+    -ms-border-radius: 50px 0px 50px 0px;
+    -o-border-radius: 50px 0px 50px 0px;
+    -webkit-transform: translate(-50%, -49%);
+    -moz-transform: translate(-50%, -49%);
+    -ms-transform: translate(-50%, -49%);
+    -o-transform: translate(-50%, -49%);
+    -webkit-border-radius: 50px 5px 50px 5px;
+}
+
+
+.login form div {
+    /* border: 1px solid red; */
+}
+
+.login form .login-logo {
+    width: 100px;
+    position: absolute;
+    top: -10%;
+    left: 50%;
+    transform: translate(-50%, -10%);
+    -webkit-transform: translate(-50%, -10%);
+    -moz-transform: translate(-50%, -10%);
+    -ms-transform: translate(-50%, -10%);
+    -o-transform: translate(-50%, -10%);
+}
+
+.login form input {
+    border: 1px solid var(--primary_light_color);
+    /* border: none; */
+    outline: none;
+    padding: 10px 5px;
+    background-color: var(--primary_light_color);
+    width: 100%;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    -ms-border-radius: 5px;
+    -o-border-radius: 5px;
+}
+
+.login form input:focus {
+    border: 1px solid var(--primary_color);
+    outline: none;
+}
+
+.login form .submit {
+    /* border: 1px solid red; */
+    position: relative;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.login form button {
+    border: none;
+    outline: none;
+    text-transform: uppercase;
+    background-color: var(--primary_color);
+    color: #fff;
+    padding: 10px 30px;
+    cursor: pointer;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    -ms-border-radius: 5px;
+    -o-border-radius: 5px;
+}
+
+.login form button:hover {
+    /* background-color: var(--primary_arsh);
+    color: #333; */
+}
+
+.login form a {
+    text-decoration: none;
+    color: var(--primary_color);
+}
+
+.login form .below {
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 14px;
+    text-align: center;
+    width: 100%;
+    margin-top: 30px;
+}

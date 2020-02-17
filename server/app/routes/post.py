@@ -2,8 +2,9 @@ from flask import Blueprint, jsonify, request
 from marshmallow.exceptions import ValidationError
 
 from app import models, db
-from app.schemas import schema_post
+from app.schemas import schema_post, schema_user
 from app.auth import decorators
+from app.utils import util
 
 
 post_api = Blueprint('post_api', __name__, url_prefix='/post')
@@ -12,7 +13,7 @@ post_api = Blueprint('post_api', __name__, url_prefix='/post')
 @post_api.route('/create', methods=['POST'])
 @decorators.token_required
 def post_create():
-    error = None
+    error = {'body': None}
     message = None
     success = False
     results = None
@@ -22,27 +23,27 @@ def post_create():
             data = request.get_json()
 
             if not data:
-                error = 'Json data is missen'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                error['body'] = 'Json data is missen'
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         except Exception as e:
-            error = 'Json data is missen'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            error['body'] = 'Json data is missen'
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         try:
             clean_data = schema_post.post_validate_schema.load(data)
 
         except ValidationError as e:
             error = e.normalized_messages()
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         try:
             user = models.User.query.filter_by(
                 id=clean_data['user_id']).first()
 
             if not user:
-                error = 'Invalid user_id parsed'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                error['body'] = 'Invalid user_id parsed'
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
             new_post = models.Post(body=clean_data['body'], created_by=user.id)
 
@@ -55,21 +56,23 @@ def post_create():
             results['liked_by'] = []
             results['comments'] = []
 
-            for liked in post.liked_post:
+            for liked in new_post.liked_post:
                 results['liked_by'].append(liked.user.username)
 
-            for comment in post.comments:
+            for comment in new_post.comments:
                 data = {'body': comment.body, 'commented_by': comment.commented_by,
                         'comment_date': comment.comment_date}
                 results['comments'].append(data)
 
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('CREATED')
+
         except Exception as e:
-            error = 'Invalid user_id parsed'
+            error['body'] = 'Invalid user_id parsed'
 
     else:
         error = 'Only Json data is required'
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
 
 @post_api.route('/<int:post_id>/update', methods=['PUT'])
@@ -86,18 +89,18 @@ def post_update(post_id):
 
             if not data:
                 error = 'Json data is missen'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         except Exception as e:
             error = 'Json data is missen'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         try:
             clean_data = schema_post.post_validate_schema.load(data)
 
         except ValidationError as e:
             error = e.normalized_messages()
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         try:
             user = models.User.query.filter_by(
@@ -105,11 +108,11 @@ def post_update(post_id):
 
             if not user:
                 error = 'Invalid user_id parsed'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         except Exception as e:
             error = 'Invalid user_id parsed'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         try:
             post = models.Post.query.filter_by(
@@ -117,7 +120,7 @@ def post_update(post_id):
 
             if not post:
                 error = 'Post not found'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
             post.body = clean_data['body']
 
@@ -136,15 +139,18 @@ def post_update(post_id):
                         'comment_date': comment.comment_date}
                 results['comments'].append(data)
 
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
+
         except Exception as e:
             error = 'Post not found'
 
     else:
         error = 'Only Json data is required'
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
 
+# TODO: successfully delete a post found in a many-to-many relationship
 @post_api.route('/<int:post_id>/delete', methods=['DELETE'])
 @decorators.token_required
 def post_delete(post_id):
@@ -153,52 +159,37 @@ def post_delete(post_id):
     success = False
     results = None
 
-    if request.is_json:
-        try:
-            data = request.get_json()
+    try:
+        post = models.Post.query.filter_by(
+            id=post_id).first()
+        print(post, '#################')
 
-            if not data:
-                error = 'Json data is missen'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
-
-        except Exception as e:
-            error = 'Json data is missen'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
-
-        try:
-            user = models.User.query.filter_by(
-                id=data['user_id']).first()
-
-            if not user:
-                error = 'Invalid user_id parsed'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
-
-        except Exception as e:
-            error = 'Invalid user_id or username parsed'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
-
-        try:
-            post = models.Post.query.filter_by(
-                id=post_id, created_by=user.id).first()
-
-            if not post:
-                error = 'Post not found'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
-
-            db.session.delete(post)
-            db.session.commit()
-
-            success = True
-            message = "Post successfully deleted"
-
-        except Exception as e:
+        if not post:
             error = 'Post not found'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
-    else:
-        error = 'Only Json data is required'
+        print('1 #################')
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+        # db.session.delete(post)
+        print('2 #################')
+        # db.session.commit()
+
+        db.session.delete(models.Post.query.filter_by(id=post_id).one())
+        db.session.commit()
+
+        success = True
+        message = "Post successfully deleted"
+
+        print('3 #################')
+
+        return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
+
+    except Exception as e:
+        print(e, '#################')
+        error = 'Post not found...'
+        return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
+
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
 
 @post_api.route('/<int:post_id>/<string:username>', methods=['GET'])
@@ -215,11 +206,11 @@ def get_single_user_post(post_id, username):
 
             if not data:
                 error = 'Json data is missen'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         except Exception as e:
             error = 'Json data is missen'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         try:
             user = models.User.query.filter_by(
@@ -227,11 +218,11 @@ def get_single_user_post(post_id, username):
 
             if not user:
                 error = 'Invalid user_id or username parsed'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         except Exception as e:
             error = 'Invalid user_id or username parsed'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         try:
             post = models.Post.query.filter_by(
@@ -239,7 +230,10 @@ def get_single_user_post(post_id, username):
 
             if not post:
                 error = 'Post not found'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
+
+            # try:
+            #     user = models.User.query.filter_by(id=post.created_by).first()
 
             success = True
             results = schema_post.post_schema.dump(post)
@@ -254,13 +248,15 @@ def get_single_user_post(post_id, username):
                         'comment_date': comment.comment_date}
                 results['comments'].append(data)
 
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
+
         except Exception as e:
             error = 'Post not found'
 
     else:
         error = 'Only Json data is required'
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
 
 @post_api.route('/<string:username>', methods=['GET'])
@@ -277,11 +273,11 @@ def get_all_user_post(username):
 
             if not data:
                 error = 'Json data is missen'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         except Exception as e:
             error = 'Json data is missen'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         try:
             user = models.User.query.filter_by(
@@ -289,18 +285,18 @@ def get_all_user_post(username):
 
             if not user:
                 error = 'Invalid user_id or username parsed'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         except Exception as e:
             error = 'Invalid user_id parsed'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         try:
             posts = models.Post.query.filter_by(created_by=user.id).all()
 
             if not posts:
                 error = 'No post found'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
             success = True
 
@@ -320,13 +316,15 @@ def get_all_user_post(username):
 
                 results.append(data)
 
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
+
         except Exception as e:
             error = 'No post found'
 
     else:
         error = 'Only Json data is required'
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
 
 @post_api.route('/<int:post_id>', methods=['GET'])
@@ -343,7 +341,7 @@ def get_single_post(post_id):
 
         if not post:
             error = 'Post not found'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         success = True
         results = schema_post.post_schema.dump(post)
@@ -358,10 +356,12 @@ def get_single_post(post_id):
                     'comment_date': comment.comment_date}
             results['comments'].append(data)
 
+        return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
+
     except Exception as e:
         error = 'Post not found'
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
 
 @post_api.route('', methods=['GET'])
@@ -372,17 +372,19 @@ def get_all_post():
     success = False
     results = None
 
-    posts = models.Post.query.all()
+    posts = models.Post.query.order_by(db.desc('id')).all()
 
     if not posts:
         error = 'No post found'
-        return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+        return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
     success = True
 
     results = []
     for post in posts:
+        created_user = models.User.query.filter_by(id=post.created_by).first()
         data = schema_post.post_schema.dump(post)
+        data['created_by'] = schema_user.user_schema.dump(created_user)
         data['liked_by'] = []
         data['comments'] = []
 
@@ -396,7 +398,7 @@ def get_all_post():
 
         results.append(data)
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
 
 
 @post_api.route('/like/<int:post_id>', methods=['PUT'])
@@ -413,11 +415,11 @@ def like_post(post_id):
 
             if not data:
                 error = 'Json data is missen'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         except Exception as e:
             error = 'Json data is missen'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         try:
             user = models.User.query.filter_by(
@@ -425,11 +427,11 @@ def like_post(post_id):
 
             if not user:
                 error = 'Invalid user_id parsed'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         except Exception as e:
             error = 'Invalid user_id parsed'
-            return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
         try:
             post = models.Post.query.filter_by(
@@ -437,20 +439,21 @@ def like_post(post_id):
 
             if not post:
                 error = 'Post not found'
-                return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+                return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')
 
             if user in post.liked_by:
                 post.liked = False
                 post.no_likes -= 1
                 post.liked_by.remove(user)
+                message = "Post successfully unliked"
             else:
                 post.liked = True
                 post.no_likes += 1
                 post.liked_by.append(user)
+                message = "Post successfully liked"
 
             db.session.commit()
             success = True
-            message = "Post successfully unliked"
 
             results = schema_post.post_schema.dump(post)
             results['liked_by'] = []
@@ -464,10 +467,12 @@ def like_post(post_id):
                         'comment_date': comment.comment_date}
                 results['comments'].append(data)
 
+            return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('SUCCESS')
+
         except Exception as e:
             error = 'Post not found'
 
     else:
         error = 'Only Json data is required'
 
-    return jsonify({'success': success, 'data': results, 'message': message, 'error': error})
+    return jsonify({'success': success, 'data': results, 'message': message, 'error': error}), util.http_status_code('BAD_REQUEST')

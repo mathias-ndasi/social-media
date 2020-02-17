@@ -1,0 +1,64 @@
+.signup {
+    /* border: 1px solid red; */
+    height: 90vh;
+    /* background-image: url("../images/login.png");
+    background-repeat: no-repeat;
+    background-position: center; */
+}
+
+.signup .signup-content form {
+    border: 1px solid rgba(0, 0, 0, 0.17);
+    /*background-color: rgba(251, 251, 251, 0.712);
+    */
+    width: 500px;
+    padding: 80px 30px;
+    position: absolute;
+    top: 50%;
+    left: 49%;
+    transform: translate(-50%, -49%);
+    border-radius: 50px 0px 50px 0px;
+    -webkit-border-radius: 50px 0px 50px 0px;
+    -moz-border-radius: 50px 0px 50px 0px;
+    -ms-border-radius: 50px 0px 50px 0px;
+    -o-border-radius: 50px 0px 50px 0px;
+    -webkit-transform: translate(-50%, -49%);
+    -moz-transform: translate(-50%, -49%);
+    -ms-transform: translate(-50%, -49%);
+    -o-transform: translate(-50%, -49%);
+    -webkit-border-radius: 50px 5px 50px 5px;
+}
+
+.signup form div {
+    /* border: 1px solid red; */
+}
+
+.signup .signup-content form .signup-logo {
+    width: 100px;
+    position: absolute;
+    top: -10%;
+    left: 50%;
+    transform: translate(-50%, -10%);
+    -webkit-transform: translate(-50%, -10%);
+    -moz-transform: translate(-50%, -10%);
+    -ms-transform: translate(-50%, -10%);
+    -o-transform: translate(-50%, -10%);
+}
+
+
+.signup .signup-content form button:hover {
+    /* background-color: var(--primary_arsh);
+    color: #333; */
+}
+
+.signup .signup-content form a {
+    text-decoration: none;
+    color: var(--primary_color);
+}
+
+.signup .signup-content form .below {
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 14px;
+    text-align: center;
+    width: 100%;
+    margin-top: 30px;
+}

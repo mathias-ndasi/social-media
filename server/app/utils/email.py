@@ -18,7 +18,7 @@ def account_comfirmation_email(user, *args, **kwargs):
 
         {secret_code}
         
-        get_secret_code make this message then simply ignore this email and no changes will be made.    
+        If you did not make this message then simply ignore this email and no changes will be made.    
         """
 
     mail.send(msg)
