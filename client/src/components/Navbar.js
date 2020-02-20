@@ -22,6 +22,7 @@ class Navbar extends Component {
     super(props);
 
     this.state = {
+      show_notification: false,
       data: {
         body: ""
       }
@@ -61,6 +62,14 @@ class Navbar extends Component {
     if (main_nav.classList.contains("push")) {
       main_nav.classList.remove("push");
     }
+  };
+
+  notification = e => {
+    let notify = document.querySelector("#nnotification");
+    this.setState({
+      ...this.state,
+      show_notification: !this.state.show_notification
+    });
   };
 
   modalClose = () => {
@@ -104,6 +113,7 @@ class Navbar extends Component {
 
   render() {
     const { isLogin, loading, popup } = this.props;
+    const { show_notification } = this.state;
 
     let body;
 
@@ -122,10 +132,37 @@ class Navbar extends Component {
           </a>
         </li>
         <li>
-          <a href="#" className="icon-anim notification">
+          <a
+            href="#"
+            className="icon-anim notification"
+            id="notification"
+            onClick={this.notification}
+          >
             <span className="notification-count">6</span>
             <IoIosNotifications />
           </a>
+
+          {show_notification ? (
+            // div.
+            <div className="notification_container">
+              <div className="head">
+                <h4>notifications</h4>
+              </div>
+              <div className="body">
+                <ul>
+                  <li>
+                    <p>Hello there...</p>
+                  </li>
+                  <li>
+                    <p>This is a bluff</p>
+                  </li>
+                  <li>
+                    <p>I love this like crazy...</p>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          ) : null}
         </li>
         <li id="slider">
           <a href="#" className="icon-anim" onClick={this.slider}>

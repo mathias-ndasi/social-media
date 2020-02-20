@@ -3,7 +3,8 @@ import {
   LOGOUT_USER,
   SIGNUP_ACTION,
   ACCOUNT_CONFIRMATION,
-  UPDATE_PROFILE
+  UPDATE_PROFILE,
+  UPDATE_PROFILE_BIO
 } from "./actions";
 
 const initialState = {};
@@ -19,14 +20,12 @@ export default (state = initialState, action) => {
     case LOGOUT_USER:
       return initialState;
     case UPDATE_PROFILE:
-      console.log(state, 'hello...')
       return {
         ...state,
-        data: {
-          ...state.data,
-          profile_pic: action.profile_pic
-        }
+        profile_pic: action.profile_pic
       }
+      case UPDATE_PROFILE_BIO:
+        return action.user
       default:
         return state;
   }

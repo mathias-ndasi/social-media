@@ -65,16 +65,11 @@ class Home extends Component {
                     <div>
                       <img src={user && user.profile_pic} alt="profile" />
                     </div>
-                    <p>
-                      <a href="#" className="icon-anim">
-                        <IoMdCreate />
-                      </a>
-                    </p>
                   </div>
 
                   <p className="username">@{user && user.username}</p>
 
-                  {user.bio && <p>{user.bio}</p>}
+                  {user.bio && <p className="bio">{user.bio}</p>}
 
                   {user.location && (
                     <p>

@@ -173,8 +173,8 @@ def post_delete(post_id):
         liked_post = models.LikedPost.query.filter_by(post_id=post.id).first()
         # print(liked_post, '########')
         # if liked_post:
-        db.session.delete(liked_post)
-        db.session.commit()
+        # db.session.delete(liked_post)
+        # db.session.commit()
 
         print('2 #################')
         db.session.delete(post)

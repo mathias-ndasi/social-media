@@ -144,11 +144,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 10px;
+  margin-top: 20px;
 }
 
 .user-data .username {
   color: var(--primary_color);
+  margin-bottom: 10px;
+}
+
+.user-data .bio {
+  margin-bottom: 20px;
 }
 
 .user-data span {
@@ -211,4 +216,63 @@
   object-fit: cover;
   object-position: center;
   border-radius: 50%;
+}
+
+.user-data p {
+  margin: 5px auto;
+}
+
+/* notification popup */
+#notification {
+  position: relative;
+}
+
+.notification_container {
+  width: 300px;
+  height: 400px;
+  overflow-y: scroll;
+  border-radius: 5px 20px 5px 5px;
+  position: absolute;
+  top: 100px;
+  background: #ccc;
+  animation: notification .5s ease-in-out 0.01s forwards;
+}
+
+@keyframes notification {
+  0% {
+    transform: skewX(180deg);
+  }
+
+  50% {
+    transform: skewX(-180deg);
+    -webkit-transform: skewX(-180deg);
+    -moz-transform: skewX(-180deg);
+    -ms-transform: skewX(-180deg);
+    -o-transform: skewX(-180deg);
+  }
+
+  100% {
+    transform: skewX(0deg);
+    -webkit-transform: skewX(0deg);
+    -moz-transform: skewX(0deg);
+    -ms-transform: skewX(0deg);
+    -o-transform: skewX(0deg);
+  }
+}
+
+.notification_container .head {
+  margin: 10px auto;
+  text-align: center;
+  color: var(--primary_color);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.notification_container .body ul {
+  list-style: none;
+  display: flex;
+  flex-flow: column;
+}
+
+.notification_container .body ul li {
+  margin: unset
 }

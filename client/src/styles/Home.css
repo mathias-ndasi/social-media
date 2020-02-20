@@ -20,4 +20,5 @@
   height: fit-content;
   padding: 25px 10px;
   border-radius: 5px;
+  max-width: 370px;
 }

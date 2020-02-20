@@ -55,20 +55,25 @@ class SideNav extends Component {
     e.preventDefault();
     console.log(this.state.data);
 
-    // this.props.setLoader();
-    // let data = this.jsonData(this.state.data);
+    this.props.setLoader();
+    let data = this.jsonData(this.state.data);
+    this.props.updateProfileBio(
+      this.props.user.username,
+      data,
+      this.props.token
+    );
 
     // this.props.loginUser(data, this.props.history);
     // this.refs.loginForm.reset();
-    // this.setState({
-    //   ...this.state,
-    //   popup: false,
-    //   data: {
-    //     bio: "",
-    //     location: "",
-    //     website: ""
-    //   }
-    // });
+    this.setState({
+      ...this.state,
+      popup: false,
+      data: {
+        bio: "",
+        location: "",
+        website: ""
+      }
+    });
   };
 
   jsonData = data => {
@@ -147,7 +152,7 @@ class SideNav extends Component {
 
           <p className="username">@{user && user.username}</p>
 
-          {user.bio && <p>{user.bio}</p>}
+          {user.bio && <p className="bio">{user.bio}</p>}
 
           {user.location && (
             <p>

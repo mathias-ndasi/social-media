@@ -14,6 +14,7 @@ export const RESET_TOKEN = "RESET_TOKEN";
 export const SET_ERROR = "SET_ERROR";
 export const RESET_ERROR = "RESET_ERROR";
 export const UPDATE_PROFILE = "UPDATE_PROFILE";
+export const UPDATE_PROFILE_BIO = "UPDATE_PROFILE_BIO";
 
 export const loginUser = (jsonData, history) => {
   return dispatch => {
@@ -287,7 +288,25 @@ export const updateProfileBio = (username, jsonData, token) => {
         }, 1000);
       })
       .catch(err => {
-        console.log(err.response);
+        try {
+          console.log(err.response.data);
+          if (err.response.data.error) {
+            // dispatch(setLoader());
+
+            setTimeout(() => {
+              dispatch(resetLoader());
+            }, 1000);
+
+            dispatch(setError(err.response.data.error));
+
+            // clear errors
+            setTimeout(() => {
+              dispatch(resetError());
+            }, 5000);
+          }
+        } catch {
+          console.log("ERROR........");
+        }
       });
   };
 };
