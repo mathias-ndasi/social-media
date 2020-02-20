@@ -98,7 +98,7 @@ class Navbar extends Component {
 
   jsonData = () => {
     let data = this.state.data;
-    data["user_id"] = this.props.user.data.id;
+    data["user_id"] = this.props.user.id;
     return JSON.stringify(data);
   };
 

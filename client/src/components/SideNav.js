@@ -53,20 +53,22 @@ class SideNav extends Component {
 
   handleSubmit = e => {
     e.preventDefault();
-    this.props.setLoader();
+    console.log(this.state.data);
+
+    // this.props.setLoader();
     // let data = this.jsonData(this.state.data);
 
     // this.props.loginUser(data, this.props.history);
     // this.refs.loginForm.reset();
-    this.setState({
-      ...this.state,
-      popup: false,
-      data: {
-        bio: "",
-        location: "",
-        website: ""
-      }
-    });
+    // this.setState({
+    //   ...this.state,
+    //   popup: false,
+    //   data: {
+    //     bio: "",
+    //     location: "",
+    //     website: ""
+    //   }
+    // });
   };
 
   jsonData = data => {
@@ -90,7 +92,7 @@ class SideNav extends Component {
     let formData = new FormData();
     formData.append("profile_pic", e.target.files[0], e.target.files[0].name);
     this.props.updateProfile(
-      this.props.user.data.username,
+      this.props.user.username,
       formData,
       this.props.token
     );
@@ -117,8 +119,7 @@ class SideNav extends Component {
       // }, 1000);
     }
 
-    const user = this.props.user.data;
-    const { isLogin, loading } = this.props;
+    const { isLogin, loading, user } = this.props;
 
     const sideContent = user ? (
       <nav className="side-nav">
@@ -227,9 +228,10 @@ class SideNav extends Component {
                           placeholder="Enter biography"
                           onChange={this.handleInput}
                           autoComplete="off"
+                          required
                         ></textarea>
                         {bio && <p className="error">{bio}</p>}
-                      </div>{" "}
+                      </div>
                       <br />
                       <div className="input">
                         <label htmlFor="location">Location</label> <br />
@@ -240,6 +242,7 @@ class SideNav extends Component {
                           placeholder="Enter location"
                           onChange={this.handleInput}
                           autoComplete="off"
+                          required
                         />
                         {location && <p className="error">{location}</p>}
                       </div>
@@ -250,7 +253,7 @@ class SideNav extends Component {
                           type="url"
                           name="website"
                           value={this.state.data.website}
-                          placeholder="Enter website"
+                          placeholder="Enter website (optional)"
                           onChange={this.handleInput}
                           autoComplete="off"
                         />

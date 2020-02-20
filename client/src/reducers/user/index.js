@@ -15,7 +15,7 @@ export default (state = initialState, action) => {
     case ACCOUNT_CONFIRMATION:
       return action.message;
     case LOGIN_USER:
-      return action.data;
+      return action.user;
     case LOGOUT_USER:
       return initialState;
     case UPDATE_PROFILE:

@@ -28,16 +28,14 @@ class Home extends Component {
     }
 
     // get all post
-    if (this.props.user.data) {
+    if (this.props.user) {
       this.props.getAllPost(this.props.token);
       this.props.resetPopup();
     }
   }
 
   render() {
-    const { message, loading } = this.props;
-    const user = this.props.user.data;
-    // console.log(user);
+    const { message, loading, user } = this.props;
 
     return (
       <div className="home">

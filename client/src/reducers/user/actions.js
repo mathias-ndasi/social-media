@@ -24,7 +24,7 @@ export const loginUser = (jsonData, history) => {
           delete res.data.data["password"];
           dispatch(setToken(res.data.data["token"]));
           delete res.data.data["token"];
-          dispatch(loginAction(res.data));
+          dispatch(loginAction(res.data.data));
           dispatch(isLoginAction(true));
 
           if (res.data.message) {
@@ -35,8 +35,12 @@ export const loginUser = (jsonData, history) => {
             }, 4000);
           }
 
+          setTimeout(() => {
+            dispatch(resetLoader());
+          }, 1000);
+
           history.push("/");
-          dispatch(setLoader());
+          // dispatch(setLoader());
 
           // setInterval(() => {
           //   dispatch(getToken(res.data.data['username']))
@@ -136,10 +140,10 @@ export const getToken = username => {
   };
 };
 
-export const loginAction = res => {
+export const loginAction = user => {
   return {
     type: LOGIN_USER,
-    data: res
+    user
   };
 };
 
@@ -273,6 +277,14 @@ export const updateProfileBio = (username, jsonData, token) => {
       })
       .then(res => {
         console.log(res.data);
+        dispatch({
+          type: UPDATE_PROFILE_BIO,
+          user: res.data.data
+        });
+
+        setTimeout(() => {
+          dispatch(resetLoader());
+        }, 1000);
       })
       .catch(err => {
         console.log(err.response);

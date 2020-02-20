@@ -1,11 +1,11 @@
 from flask import Blueprint, jsonify, request
 from marshmallow.exceptions import ValidationError
+from sqlalchemy.sql.expression import delete
 
-from app import models, db
-from app.schemas import schema_post, schema_user
+from app import db, models
 from app.auth import decorators
+from app.schemas import schema_post, schema_user
 from app.utils import util
-
 
 post_api = Blueprint('post_api', __name__, url_prefix='/post')
 
@@ -170,11 +170,14 @@ def post_delete(post_id):
 
         print('1 #################')
 
-        # db.session.delete(post)
-        print('2 #################')
-        # db.session.commit()
+        liked_post = models.LikedPost.query.filter_by(post_id=post.id).first()
+        # print(liked_post, '########')
+        # if liked_post:
+        db.session.delete(liked_post)
+        db.session.commit()
 
-        db.session.delete(models.Post.query.filter_by(id=post_id).one())
+        print('2 #################')
+        db.session.delete(post)
         db.session.commit()
 
         success = True
