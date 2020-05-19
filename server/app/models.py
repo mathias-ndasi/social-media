@@ -19,10 +19,11 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     is_deleted = db.Column(db.Boolean, default=False)
     joined_date = db.Column(db.DateTime, default=datetime.utcnow())
-    posts = db.relationship('Post', secondary='liked_post',
-                            cascade="save-update, merge, delete")
+    posts = db.relationship('Post', secondary='liked_post', backref=db.backref(
+        "liked_post", cascade="all, delete-orphan"), single_parent=True)
     secret_code = db.Column(db.String(8), nullable=True)
-    notifications = db.relationship('Notification', backref='user')
+    notifications = db.relationship(
+        'Notification', backref=db.backref("user", cascade="all, delete-orphan"), single_parent=True)
 
     created_on = db.Column(db.DateTime, default=datetime.utcnow())
     updated_on = db.Column(db.DateTime, onupdate=datetime.utcnow())
@@ -45,7 +46,8 @@ class Post(db.Model):
     no_comments = db.Column(db.Integer, default=0)
     posted_date = db.Column(db.DateTime, default=datetime.utcnow())
     liked = db.Column(db.Boolean, default=False)
-    liked_by = db.relationship('User', secondary='liked_post')
+    liked_by = db.relationship('User', secondary='liked_post', backref=db.backref(
+        "liked_post", cascade="all, delete-orphan"), single_parent=True)
     comments = db.relationship('Comment', backref='post')
 
     created_on = db.Column(db.DateTime, default=datetime.utcnow())
@@ -64,10 +66,16 @@ class LikedPost(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
-    user = db.relationship(User, backref="liked_post")
-    post = db.relationship(Post, backref="liked_post",
-                           cascade="save-update, merge, delete")
+    user = db.relationship(User, backref=db.backref(
+        "liked_post", cascade="all, delete-orphan"), single_parent=True)
+    post = db.relationship(Post, backref=db.backref(
+        "liked_post", cascade="all, delete-orphan"), single_parent=True)
 
+
+# liked_post = db.Table('liked_post', db.Model.metadata,
+#                       db.Column('user_id', db.Integer, db.ForeignKey(
+#                           'user.id', ondelete='cascade'), primary_key=True),
+#                       db.Column('post_id', db.Integer, db.ForeignKey('post.id', ondelete='cascade'), primary_key=True))
 
 class Comment(db.Model):
     __tablename__ = 'comment'
